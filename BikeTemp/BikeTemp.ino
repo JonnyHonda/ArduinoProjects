@@ -5,7 +5,7 @@
 // Data wire is plugged into pin 2 on the Arduino
 #define ONE_WIRE_BUS 10
 
-// Define 2 pins to use as outputs for waring LEDs
+// Define 2 pins to use as outputs for warning LEDs
 int led[2] = {8,9};
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -15,7 +15,7 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 int state = 0;
 int interval = 5000;
-long t = 0;
+unsigned long t = 0;
 float temp;
 
 
@@ -57,6 +57,15 @@ void loop(void){
   lcd.print(strarray[state]);
   lcd.setCursor(0,1);
   temp = sensors.getTempCByIndex(state);
+  switch(state){
+      case 0: 
+         (temp > 85 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+        break;
+      case 1:
+        (temp < 3 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);  
+        break;
+      
+  }
   lcd.print(temp);
   lcd.print((char)223);
   lcd.print("C"); 
