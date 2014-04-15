@@ -1,9 +1,23 @@
+/**
+  BikeTemp.ino
+  Author: John Burrin (JonnyHonda)
+
+  This code uses two DS18B20 temperature sensors and displays their readings
+  on a 1 row, 16 character display. 
+  The purpose is to sample the temperature of the water cooling system and the ambient 
+  air temperature.
+  If the water sensor exceeds WATER_MAX_TEMP then a warning LED is illuminated also if the air temperature is
+  below AIR_MIN_TEMP the other LED is illuminated.
+**/
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <LiquidCrystal.h>
 
-// Data wire is plugged into pin 2 on the Arduino
+// Data wire for DS18B20s is plugged into pin 10 on the Arduino
 #define ONE_WIRE_BUS 10
+
+#define WATER_MAX_TEMP = 90
+#define AIR_MIN_TEMP = 3
 
 // Define 2 pins to use as outputs for warning LEDs
 int led[2] = {8,9};
@@ -21,12 +35,14 @@ float temp;
 
 char* strarray[] = {"Water = ", "Air   = "};
 
-// initialize the library with the numbers of the interface pins
+// Initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
 void setup(void)
 {
   // start serial port
   Serial.begin(9600);
+
+  // Setup pins for Warning LEDs
   pinMode(led[0], OUTPUT); 
   pinMode(led[1], OUTPUT);
   
@@ -59,14 +75,15 @@ void loop(void){
   temp = sensors.getTempCByIndex(state);
   switch(state){
       case 0: 
-         (temp > 85 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+         (temp > WATER_MAX_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
         break;
       case 1:
-        (temp < 3 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);  
+          (temp < AIR_MIN_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);  
         break;
       
   }
   lcd.print(temp);
+  // Celsius symbol
   lcd.print((char)223);
   lcd.print("C"); 
 }
