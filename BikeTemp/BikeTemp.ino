@@ -68,7 +68,7 @@ void loop(void){
   }
   lcd.print(temp);
   lcd.print((char)223);
-  lcd.print("C"); 
+  lcd.print("C  "); 
 }
 
 
