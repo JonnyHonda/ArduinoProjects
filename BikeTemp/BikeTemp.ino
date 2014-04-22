@@ -44,28 +44,21 @@ void setup(void)
 void loop(void){
 // By do it this way the temperatures are aways updated and
 // and no delays are used
-  if( millis() > (interval + t)){
-    if(state == 0){
-      state = 1;
-    }else{
-      state = 0;
-    }
-  t = millis();
-}
   sensors.requestTemperatures(); // Send the command to get temperatures   
   lcd.setCursor(0,0);
   lcd.print(strarray[state]);
   lcd.setCursor(0,1);
   temp = sensors.getTempCByIndex(state);
-  switch(state){
-      case 0: 
-         (temp > 85 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
-        break;
-      case 1:
-        (temp < 3 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);  
-        break;
-      
-  }
+  if( millis() > (interval + t)){
+    if(state == 0){
+      (temp > 85 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      state = 1;
+    }else{
+      (temp < 3 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      state = 0;
+    }
+  t = millis();
+}
   lcd.print(temp);
   lcd.print((char)223);
   lcd.print("C  "); 
