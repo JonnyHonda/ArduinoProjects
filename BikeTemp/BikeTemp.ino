@@ -67,10 +67,10 @@ void loop(void){
   temp = sensors.getTempCByIndex(state);
   if( millis() > (interval + t)){
     if(state == 0){
-      (temp > WATER_MAX_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      (temp >= WATER_MAX_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
       state = 1;
     }else{
-      (temp < AIR_MIN_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      (temp <= AIR_MIN_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
       state = 0;
     }
   t = millis();
