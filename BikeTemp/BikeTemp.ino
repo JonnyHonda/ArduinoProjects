@@ -16,8 +16,8 @@
 // Data wire for DS18B20s is plugged into pin 10 on the Arduino
 #define ONE_WIRE_BUS 10
 
-#define WATER_MAX_TEMP = 90
-#define AIR_MIN_TEMP = 3
+#define WATER_MAX_TEMP 85
+#define AIR_MIN_TEMP 3
 
 // Define 2 pins to use as outputs for warning LEDs
 int led[2] = {8,9};
@@ -67,10 +67,10 @@ void loop(void){
   temp = sensors.getTempCByIndex(state);
   if( millis() > (interval + t)){
     if(state == 0){
-      (temp > 85 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      (temp > WATER_MAX_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
       state = 1;
     }else{
-      (temp < 3 ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
+      (temp < AIR_MIN_TEMP ) ? digitalWrite(led[state], HIGH) : digitalWrite(led[state], LOW);
       state = 0;
     }
   t = millis();
