@@ -1,13 +1,13 @@
 /*
   DS18b20 temperature webserver.
-  The webserve part of this code is taked from the example provided in the Dallas library examples
-  
-  How it works.
-  After initial setup, the looping code fetches the tempeartures form the sensors on each pass.
-  When the code detect an ethernet client a page id returned containing whatever device array has stored.
-  This way we never fetch the live values during a request.
-  
-  John Burrin March 2015
+ The webserve part of this code is taked from the example provided in the Dallas library examples
+ 
+ How it works.
+ After initial setup, the looping code fetches the tempeartures form the sensors on each pass.
+ When the code detect an ethernet client a page id returned containing whatever device array has stored.
+ This way we never fetch the live values during a request.
+ 
+ John Burrin March 2015
  */
 
 #include <SPI.h>
@@ -105,10 +105,15 @@ void setup() {
 #ifdef DEBUG
   Serial.println("Setting Sensor precision...");
 #endif
-// Interrate over the sensors by index, get the address, set the precsion
+
+  // Set precsion of all sensors
+  sensors.setResolution(TEMPERATURE_PRECISION);
+  // Interrate over the sensors by index, get the address, set the precsion
   for (int loop=0; loop < sensorCount; loop++){
+#ifdef DEBUG
     sensors.getAddress(devices[loop].address, loop);
-    sensors.setResolution(devices[loop].address, TEMPERATURE_PRECISION);
+#endif
+    //  sensors.setResolution(devices[loop].address, TEMPERATURE_PRECISION);
 #ifdef DEBUG
     Serial.print("Device Address: ");
     printAddress(devices[loop].address);
@@ -124,9 +129,10 @@ void loop() {
 #endif  
   sensors.requestTemperatures(); // Send the command to get temperatures
 
-// Get the temperature in C of each sensor
+    // Get the temperature in C of each sensor
   for(int loop = 0; loop < sensorCount; loop++){
-    devices[loop].tempC = sensors.getTempC(devices[loop].address);
+    devices[loop].tempC = sensors.getTempCByIndex(loop);
+    // devices[loop].tempC = sensors.getTempC(devices[loop].address);
   }
   // output the value of each device
 #ifdef DEBUG
@@ -198,6 +204,7 @@ void loop() {
 #endif
   }
 }
+
 
 
 
