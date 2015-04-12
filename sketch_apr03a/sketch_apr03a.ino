@@ -4,7 +4,7 @@
 #define LONG_PULSE  1500
 #define SHORT_MARGIN 300
 #define LONG_MARGIN 300
-#define DEBUG 1
+//#define DEBUG 1
 int val = 0;
 unsigned long transition_t = micros();
 unsigned long now, duration;
@@ -33,20 +33,20 @@ byte bit_count = 0;
 */
 uint8_t _crc8( uint8_t *addr, uint8_t len)
 {
-        uint8_t crc = 0;
+  uint8_t crc = 0;
 
-        // Indicated changes are from reference CRC-8 function in OneWire library
-        while (len--) {
-                uint8_t inbyte = *addr++;
-                uint8_t i;
-                for (i = 8; i; i--) {
-                        uint8_t mix = (crc ^ inbyte) & 0x80; // changed from & 0x01
-                        crc <<= 1; // changed from right shift
-                        if (mix) crc ^= 0x31;// changed from 0x8C;
-                        inbyte <<= 1; // changed from right shift
-                }
-        }
-        return crc;
+  // Indicated changes are from reference CRC-8 function in OneWire library
+  while (len--) {
+    uint8_t inbyte = *addr++;
+    uint8_t i;
+    for (i = 8; i; i--) {
+      uint8_t mix = (crc ^ inbyte) & 0x80; // changed from & 0x01
+      crc <<= 1; // changed from right shift
+      if (mix) crc ^= 0x31;// changed from 0x8C;
+      inbyte <<= 1; // changed from right shift
+    }
+  }
+  return crc;
 }
 
 void setup() {
@@ -68,7 +68,7 @@ void loop() {
   // put your main code here, to run repeatedly:
 
   int newVal;
-  for(int i=0; i < 10; i++) {
+  for (int i = 0; i < 10; i++) {
     newVal += digitalRead(2) ? 1 : 0;
     delayMicroseconds(5);
   }
@@ -80,12 +80,12 @@ void loop() {
    */
   now = micros();
 
-  if(transition_t <= now)
+  if (transition_t <= now)
     duration = now - transition_t;
   else
     duration = (~transition_t) + now;
 
-  if(newVal != val) {  // then transitioning state
+  if (newVal != val) { // then transitioning state
 
     /*
      *  We update the transition time for the pulse, and
@@ -98,7 +98,7 @@ void loop() {
      *  If the pulse width (hi or low) is outside the
      *  range of the Fine Offset signal, then ignore them.
      */
-    if(duration < (SHORT_PULSE - SHORT_MARGIN) || duration > (LONG_PULSE + LONG_MARGIN)) {
+    if (duration < (SHORT_PULSE - SHORT_MARGIN) || duration > (LONG_PULSE + LONG_MARGIN)) {
       // Meaningless pulse
       return;
     }
@@ -107,48 +107,48 @@ void loop() {
      *  If we reach here, then we have seen a potentially
      *  valid pulse. Shift the bit into the register.
      */
-    if(newVal == 1) {
+    if (newVal == 1) {
       // rising edge of a pulse (0 -> 1)
     } else {
       // falling edge of a pulse (1 -> 0)
-      if( duration >= (SHORT_PULSE - SHORT_MARGIN) && duration <= (SHORT_PULSE + SHORT_MARGIN) ) {
+      if ( duration >= (SHORT_PULSE - SHORT_MARGIN) && duration <= (SHORT_PULSE + SHORT_MARGIN) ) {
         // short pulse is binary '1'
         shift_register = (shift_register << 1) | 0x01;
         bit_count++;
 
-        #ifdef DEBUG
-        if(duration < short_min) short_min = duration;
-        if(duration > short_max) short_max = duration;
-        if(pb_idx < 200) pulse_buffer[pb_idx++] = duration;
-        #endif
+#ifdef DEBUG
+        if (duration < short_min) short_min = duration;
+        if (duration > short_max) short_max = duration;
+        if (pb_idx < 200) pulse_buffer[pb_idx++] = duration;
+#endif
 
-      } else if(duration >= (LONG_PULSE - LONG_MARGIN) && duration <= (LONG_PULSE + LONG_MARGIN)) {
+      } else if (duration >= (LONG_PULSE - LONG_MARGIN) && duration <= (LONG_PULSE + LONG_MARGIN)) {
         // long pulse is binary '0'
         shift_register = (shift_register << 1);
         bit_count++;
 
-        #ifdef DEBUG
-        if(duration < long_min) long_min = duration;
-        if(duration > long_max) long_max = duration;
-        if(pb_idx < 200) pulse_buffer[pb_idx++] = duration;
-        #endif
+#ifdef DEBUG
+        if (duration < long_min) long_min = duration;
+        if (duration > long_max) long_max = duration;
+        if (pb_idx < 200) pulse_buffer[pb_idx++] = duration;
+#endif
       }
     }
 
     // Look for signature of 0xfa (4 bits 0xf0 pre-amble + 0xa)
-    if((shift_register & 0xff) == 0xfa && buffer_idx == 0) {
+    if ((shift_register & 0xff) == 0xfa && buffer_idx == 0) {
       // Found signature - discard pre-amble and leave 0x0a.
       shift_register = 0x0a;
       bit_count = 4;
       sig_seen = 1;  // Flag that the signature has been seen.
 
-      #ifdef DEBUG
+#ifdef DEBUG
       pb_idx = 0;
-      #endif
+#endif
 
-    } else if(bit_count == 8 && sig_seen) {
+    } else if (bit_count == 8 && sig_seen) {
       // Got a byte, so store it if we have room.
-      if(buffer_idx < BUFFER_SIZE)
+      if (buffer_idx < BUFFER_SIZE)
         byte_buffer[buffer_idx++] = (byte)(shift_register & 0xff);
       else
         Serial.println("Overflow on byte");
@@ -158,69 +158,93 @@ void loop() {
 
   } else {
 
-      /*
-       *  Have we reached timeout on duration? If so, process any
-       *  bytes present in the buffer and then reset the state
-       *  variables.
-       */    
-      if(duration > 5000) {
+    /*
+     *  Have we reached timeout on duration? If so, process any
+     *  bytes present in the buffer and then reset the state
+     *  variables.
+     */
+    if (duration > 5000) {
 
-        if (buffer_idx > 0) {
+      if (buffer_idx > 0) {
 
+
+
+        /*
+         *  If we have enough bytes, then verify the checksum.
+         */
+        if (buffer_idx >= 10 && _crc8(byte_buffer, 9) == byte_buffer[9]) {
+
+          Serial.println("");
+          Serial.println("CRC Passed");
           /*
-           *  Dump the bytes to the Serial.
-           */
+          *  Dump the bytes to the Serial.
+          */
           Serial.print("Found ");
           Serial.println(buffer_idx);
 
-          for(int i = 0; i < buffer_idx; i++) {
-            for (byte mask = 0x80; mask; mask >>= 1) {
-              Serial.print(mask & byte_buffer[i] ? '1' : '0');
-            }
+          for (int i = 0; i < buffer_idx; i++) {
+            //        for (byte mask = 0x80; mask; mask >>= 1) {
+            //          Serial.print(mask & byte_buffer[i] ? '1' : '0');
+            //        }
+            //        Serial.print(' ');
+            //        Serial.print(byte_buffer[i]);
             Serial.print(' ');
-            Serial.println(byte_buffer[i]);
+            Serial.print(byte_buffer[i], HEX);
           }
-
+          Serial.println("");
           /*
-           *  If we have enough bytes, then verify the checksum.
-           */
-          if(buffer_idx >= 10 && _crc8(byte_buffer, 9) == byte_buffer[9]) {
-
-            Serial.println("CRC Passed");
-          }
-
-          buffer_idx = 0;
+          Data Sample
+          Byte     0  1  2  3  4  5  6  7  8  9
+          Nibble  ab cd ef gh ij kl mn op qr st
+          Example a1 82 0e 5d 02 04 00 4e 06 86
+          */
+          
+          /*
+          Temp is stored in 'def'
+          So we need to right shift off the 4 bit in element [2]
+          Store it in t, right shift the value by 8 bits and add
+          element [3]
+          subtractig 400 (0x190) should give us and interger value for temp
+          0x20e - 0×190 = 0x7e
+          */
+          int t = ((byte_buffer[1] >> 4));
+          float tempC = (float)((t << 8) + byte_buffer[2]) - 400;
+          Serial.print("Outdoor Temperature=");
+          Serial.println(tempC / 10);
         }
 
-        #ifdef DEBUG
-          for(int i = 0; i < pb_idx; i++) {
-            Serial.print("Pulse ");
-            Serial.print(i);
-            Serial.print(' ');
-            Serial.println(pulse_buffer[i]);
-          }
-
-          Serial.print("Short ");
-          Serial.print(short_min);
-          Serial.print(' ');
-          Serial.println(short_max);
-
-          Serial.print("Long ");
-          Serial.print(long_min);
-          Serial.print(' ');
-          Serial.println(long_max);
-
-          short_min = long_min = 9999;
-          short_max = long_max = 0;
-
-        #endif
-
-        shift_register = 0;
-        bit_count = 0;
-        sig_seen = 0;
+        buffer_idx = 0;
       }
 
-      // No transition on this iteration
-      // Serial.flush();
+#ifdef DEBUG
+      for (int i = 0; i < pb_idx; i++) {
+        Serial.print("Pulse ");
+        Serial.print(i);
+        Serial.print(' ');
+        Serial.println(pulse_buffer[i]);
+      }
+
+      Serial.print("Short ");
+      Serial.print(short_min);
+      Serial.print(' ');
+      Serial.println(short_max);
+
+      Serial.print("Long ");
+      Serial.print(long_min);
+      Serial.print(' ');
+      Serial.println(long_max);
+
+      short_min = long_min = 9999;
+      short_max = long_max = 0;
+
+#endif
+
+      shift_register = 0;
+      bit_count = 0;
+      sig_seen = 0;
+    }
+
+    // No transition on this iteration
+    // Serial.flush();
   }
 }  // end loop()

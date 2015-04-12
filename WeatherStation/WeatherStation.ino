@@ -1,16 +1,11 @@
 #define CRC_POLY 0x31 // CRC-8 = 0x31 is for: x8 + x5 + x4 + 1
 #define DEBUG 1
-#define clrb(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-#define setb(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+
 
 #define RF_PORT PORTB
 #define RF_DDR DDRB
 #define RF_PIN 2
 
-#define SDI 3 
-//#define SCK 5 
-#define CS 2
-#define SDO 4
 
 int frame; 
 int device_id; 
@@ -97,44 +92,32 @@ boolean is_crc_valid(unsigned int crcByte) {
 unsigned short rf12_xfer(unsigned short value)
 {	uint8_t i;
 
-	clrb(RF_PORT, CS);
 	for (i=0; i<16; i++)
 	{	if (value&32768)
-			setb(RF_PORT, SDI);
-		else
-			clrb(RF_PORT, SDI);
+
 		value<<=1;
 		if (RF_PIN&(1<<SDO))
 			value|=1;
-		setb(RF_PORT, SCK);
-		asm("nop");
-		asm("nop");
-		clrb(RF_PORT, SCK);
+
 	}
-	setb(RF_PORT, CS);
 	return value;
 }
 
 
 void rf12_ready(void)
 {
-clrb(RF_PORT, CS);
-asm("nop");
-asm("nop");
 while (!(RF_PIN&(1<<SDO))); // wait until FIFO ready
-setb(RF_PORT, CS);
+
 }
 
 void rf12_rxdata(unsigned char *data, unsigned char number)
 {	uint8_t  i;
-	rf12_xfer(0x82C8);			// receiver on
-	rf12_xfer(0xCA81);			// set FIFO mode
-	rf12_xfer(0xCA83);			// enable FIFO
+
 	for (i=0; i<number; i++)
-	{	rf12_ready();
+	{	//rf12_ready();
 		*data++=rf12_xfer(0xB000);
 	}
-	rf12_xfer(0x8208);			// Receiver off 
+
 }
 
 //Receive message, data[] 
