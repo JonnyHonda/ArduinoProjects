@@ -1,5 +1,4 @@
 
-
 #define SHORT_PULSE  500
 #define LONG_PULSE  1500
 #define SHORT_MARGIN 300
@@ -96,6 +95,7 @@ void loop() {
      */
     if (duration < (SHORT_PULSE - SHORT_MARGIN) || duration > (LONG_PULSE + LONG_MARGIN)) {
       // Meaningless pulse
+      //Serial.println("Meaningles Pluse");
       return;
     }
 
@@ -134,7 +134,7 @@ void loop() {
         byte_buffer[buffer_idx++] = (byte)(shift_register & 0xff);
       } else {
 #ifdef DEBUG
-        Serial.print(".");
+        Serial.println("Buffer Undersize");
 #endif
       }
 
