@@ -48,7 +48,7 @@ void setup() {
 
   // put your setup code here, to run once:
   pinMode(2, INPUT);
-
+  pinMode(13, OUTPUT);
   //Bridge.begin();
   Serial.begin(115200);
 
@@ -203,85 +203,90 @@ void loop() {
 
           // now need to add the high 4 bits of [1] (c)
           deviceID = deviceID + (byte_buffer[1] >> 4);
-          if (deviceID == 2582){
-              Serial.print("Device id           = ");
-              Serial.println(deviceID, HEX);
-              /*
-              Temp is stored in nibbles 'def'
-              So we need to right shift off the 4 bit in element [2]
-              Store it in t, right shift the value by 8 bits and add
-              element [3]
-              subtracting 400 (0x190) should give us an interger value for temp
-              0x20e - 0×190 = 0x7e
-              */
-              int t = (byte_buffer[1] & 0x0f);
-              t = t * 256;
-              t = t + byte_buffer[2];
-              t = t - 400;
-              float tempC = t / 10.0;
-              Serial.print("Outdoor Temperature = ");
-              Serial.print(tempC);
-              Serial.print((char)223);
-              Serial.println("c");
+          //    if (deviceID == 2582){
+          // Outpout to Pin 13
+          digitalWrite(13, HIGH);   // sets the LED on
+          Serial.print("Device id           = ");
+          Serial.println(deviceID, HEX);
+          /*
+          Temp is stored in nibbles 'def'
+          So we need to right shift off the 4 bit in element [2]
+          Store it in t, right shift the value by 8 bits and add
+          element [3]
+          subtracting 400 (0x190) should give us an interger value for temp
+          0x20e - 0×190 = 0x7e
+          */
+          int t = (byte_buffer[1] & 0x0f);
+          t = t * 256;
+          t = t + byte_buffer[2];
+          t = t - 400;
+          float tempC = t / 10.0;
+          Serial.print("Outdoor Temperature = ");
+          Serial.print(tempC);
+          Serial.print((char)223);
+          Serial.println("c");
 
-              /*
-              Humidity is Stored in nibbles 'gh'
-              */
-              int humidity;
-              humidity = byte_buffer[3];
-              Serial.print("Outdoor Humidity    = ");
-              Serial.print(humidity);
-              Serial.println("%");
+          /*
+          Humidity is Stored in nibbles 'gh'
+          */
+          int humidity;
+          humidity = byte_buffer[3];
+          Serial.print("Outdoor Humidity    = ");
+          Serial.print(humidity);
+          Serial.println("%");
 
-              /*
-              Wind speed is Stored in nibbles 'ij'
-              */
-              int windAvg;
-              windAvg = byte_buffer[4];
-              Serial.print("Avg Wind Speed      = ");
-              Serial.print(windAvg * 0.34);
-              Serial.println("m/s");
+          /*
+          Wind speed is Stored in nibbles 'ij'
+          */
+          int windAvg;
+          windAvg = byte_buffer[4];
+          Serial.print("Avg Wind Speed      = ");
+          Serial.print(windAvg * 0.34);
+          Serial.println("m/s");
 
-              /*
-              Wind Gust speed is Stored in nibbles 'kl'
-              */
-              int windGust;
-              windGust = byte_buffer[5];
-              Serial.print("Avg Gust Speed      = ");
-              Serial.print(windGust * 0.34);
-              Serial.println("m/s");
+          /*
+          Wind Gust speed is Stored in nibbles 'kl'
+          */
+          int windGust;
+          windGust = byte_buffer[5];
+          Serial.print("Avg Gust Speed      = ");
+          Serial.print(windGust * 0.34);
+          Serial.println("m/s");
 
-              /*
-                Wind Direction is Stored in nibble 'r'
-                */
-              int windDirection;
-              // fetch the low nibble
-              windDirection = (byte_buffer[8] & 0x0f);
-              Serial.print("Wind Direction      = ");
-              Serial.println(direction_name[windDirection]);
+          /*
+            Wind Direction is Stored in nibble 'r'
+            */
+          int windDirection;
+          // fetch the low nibble
+          windDirection = (byte_buffer[8] & 0x0f);
+          Serial.print("Wind Direction      = ");
+          Serial.println(direction_name[windDirection]);
 
-              /*
-              Rainfall count is nibble 'nop'
-              */
-              // extract low nibble from 'n'
-              int rainfall = (byte_buffer[6] & 0x0f);
-              // Shift to high byte
-              rainfall = rainfall * 256;
-              // add 'op' as low byte
-              rainfall = rainfall + byte_buffer[7];
-              // Rainfall is a rolling counter and will reset after 0xfff
-              Serial.print("Rainfall counter   = ");
-              Serial.println(rainfall);
-          }
+          /*
+          Rainfall count is nibble 'nop'
+          */
+          // extract low nibble from 'n'
+          int rainfall = (byte_buffer[6] & 0x0f);
+          // Shift to high byte
+          rainfall = rainfall * 256;
+          // add 'op' as low byte
+          rainfall = rainfall + byte_buffer[7];
+          // Rainfall is a rolling counter and will reset after 0xfff
+          Serial.print("Rainfall counter   = ");
+          Serial.println(rainfall);
+
+          delay(750);                  // waits for a 3/4 second
+          digitalWrite(13, LOW);    // sets the LED off
+          //    }
+        }
+
+        buffer_idx = 0;
       }
 
-      buffer_idx = 0;
+      shift_register = 0;
+      bit_count = 0;
+      sig_seen = 0;
     }
 
-    shift_register = 0;
-    bit_count = 0;
-    sig_seen = 0;
   }
-
-}
 }  // end loop()

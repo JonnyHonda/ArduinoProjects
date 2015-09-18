@@ -43,7 +43,7 @@ device devices[MAX_DEVICES];
 // The IP address will be dependent on your local network:
 byte mac[] = { 
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-IPAddress ip(192,168,1,177);
+IPAddress ip(192,168,1,20);
 
 // Initialize the Ethernet server library
 // with the IP address and port you want to use 
@@ -67,7 +67,6 @@ void setup() {
   // Open serial communications and wait for port to open:
   // start serial port
   Serial.begin(9600);
-
   // start the Ethernet connection and the server:
 
 #ifdef DEBUG
